@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeopardy Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 3px 3px 0 #000;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: #b39ddb;
+            margin-bottom: 20px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-card, .controls {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 250px;
+        }
+
+        .score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-align: center;
+        }
+
+        .controls button {
+            background: #4a148c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            width: 100%;
+        }
+
+        .controls button:hover {
+            background: #6a1b9a;
+            transform: translateY(-2px);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .category-header {
+            background: #4a148c;
+            padding: 20px 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .clue-cell {
+            background: #0d47a1;
+            padding: 25px 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .clue-cell:hover {
+            background: #1565c0;
+            transform: scale(1.05);
+        }
+
+        .clue-cell.used {
+            background: #263238;
+            color: #546e7a;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clue-cell.used:hover {
+            background: #263238;
+            transform: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .modal p {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .modal button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        #revealBtn {
+            background: #2e7d32;
+            color: white;
+        }
+
+        #revealBtn:hover {
+            background: #388e3c;
+        }
+
+        #correctBtn {
+            background: #4caf50;
+            color: white;
+        }
+
+        #incorrectBtn {
+            background: #f44336;
+            color: white;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 3px solid #ffd700;
+            background: #0d47a1;
+            color: white;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .score-change {
+            position: fixed;
+            font-size: 2rem;
+            font-weight: bold;
+            animation: scoreFloat 2s forwards;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        @keyframes scoreFloat {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1200px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .clue-cell {
+                font-size: 2rem;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JEOPARDY!</h1>
+            <div class="tagline">Test Your Knowledge!</div>
+        </header>
+
+        <div class="game-info">
+            <div class="score-card">
+                <h3>SCORE</h3>
+                <div class="score" id="score">$0</div>
+            </div>
+            <div class="controls">
+                <button id="newGameBtn">New Game</button>
+                <button id="howToPlayBtn">How to Play</button>
+                <button id="resetBoardBtn">Reset Board</button>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <!-- Game board will be generated by JavaScript -->
+        </div>
+
+        <div class="modal" id="clueModal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeModal()">×</button>
+                <h2 id="clueValue">$400</h2>
+                <p id="clueText">This is the clue text</p>
+                <div id="answerSection" style="display: none;">
+                    <p id="answerText">The answer will appear here</p>
+                    <div class="modal-buttons">
+                        <button id="correctBtn" onclick="handleAnswer(true)">Correct!</button>
+                        <button id="incorrectBtn" onclick="handleAnswer(false)">Incorrect</button>
+                    </div>
+                </div>
+                <div class="modal-buttons" id="questionButtons">
+                    <button id="revealBtn" onclick="revealAnswer()">Reveal Answer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Play:</h3>
+            <p>1. Click on any dollar amount to reveal a clue</p>
+            <p>2. Read the clue carefully and think of your answer</p>
+            <p>3. Click "Reveal Answer" to see the correct response</p>
+            <p>4. Click "Correct!" if you got it right, or "Incorrect" if not</p>
+            <p>5. Correct answers add to your score, incorrect answers subtract</p>
+            <p>6. Try to clear the entire board for maximum points!</p>
+        </div>
+    </div>
+
+    <script>
+        // Game data - categories and clues
+        const jeopardyData = {
+            categories: [
+                "HISTORY",
+                "SCIENCE",
+                "LITERATURE",
+                "MOVIES",
+                "GEOGRAPHY",
+                "SPORTS"
+            ],
+            clues: {
+                "HISTORY": [
+                    { clue: "This Egyptian queen had relationships with Julius Caesar and Mark Antony", answer: "Cleopatra", value: 200 },
+                    { clue: "The ancient city of Troy was located in modern-day country", answer: "Turkey", value: 400 },
+                    { clue: "This 1215 document limited the power of English monarchs", answer: "Magna Carta", value: 600 },
+                    { clue: "He was the first emperor of the Mongol Empire", answer: "Genghis Khan", value: 800 },
+                    { clue: "This wall was built to protect China from northern invasions", answer: "Great Wall of China", value: 1000 }
+                ],
+                "SCIENCE": [
+                    { clue: "This is the chemical symbol for gold", answer: "Au", value: 200 },
+                    { clue: "This planet is known as the Red Planet", answer: "Mars", value: 400 },
+                    { clue: "The powerhouse of the cell", answer: "Mitochondria", value: 600 },
+                    { clue: "This force keeps us grounded on Earth", answer: "Gravity", value: 800 },
+                    { clue: "This element has atomic number 1", answer: "Hydrogen", value: 1000 }
+                ],
+                "LITERATURE": [
+                    { clue: "This author wrote 'Romeo and Juliet'", answer: "William Shakespeare", value: 200 },
+                    { clue: "The fictional detective Sherlock Holmes lived at this address", answer: "221B Baker Street", value: 400 },
+                    { clue: "This novel begins 'Call me Ishmael'", answer: "Moby Dick", value: 600 },
+                    { clue: "This is the first book in J.R.R. Tolkien's Lord of the Rings trilogy", answer: "The Fellowship of the Ring", value: 800 },
+                    { clue: "This dystopian novel features 'Big Brother'", answer: "1984", value: 1000 }
+                ],
+                "MOVIES": [
+                    { clue: "This movie features the quote 'You talking to me?'", answer: "Taxi Driver", value: 200 },
+                    { clue: "The director of 'Pulp Fiction'", answer: "Quentin Tarantino", value: 400 },
+                    { clue: "This 1997 movie about a shipwreck won 11 Oscars", answer: "Titanic", value: 600 },
+                    { clue: "This actor played Iron Man in the Marvel Cinematic Universe", answer: "Robert Downey Jr.", value: 800 },
+                    { clue: "This film's famous line is 'Here's looking at you, kid'", answer: "Casablanca", value: 1000 }
+                ],
+                "GEOGRAPHY": [
+                    { clue: "The longest river in the world", answer: "Nile River", value: 200 },
+                    { clue: "This is the smallest continent", answer: "Australia", value: 400 },
+                    { clue: "The capital of Japan", answer: "Tokyo", value: 600 },
+                    { clue: "This country is known as the Land of the Rising Sun", answer: "Japan", value: 800 },
+                    { clue: "This African country was formerly known as Abyssinia", answer: "Ethiopia", value: 1000 }
+                ],
+                "SPORTS": [
+                    { clue: "This sport is played at Wimbledon", answer: "Tennis", value: 200 },
+                    { clue: "The team that won the 2023 Super Bowl", answer: "Kansas City Chiefs", value: 400 },
+                    { clue: "This country hosted the 2022 FIFA World Cup", answer: "Qatar", value: 600 },
+                    { clue: "This boxer was known as 'The Greatest'", answer: "Muhammad Ali", value: 800 },
+                    { clue: "The number of players on a baseball team on the field", answer: "9", value: 1000 }
+                ]
+            }
+        };
+
+        let score = 0;
+        let currentClue = null;
+        let usedClues = new Set();
+
+        // Initialize the game board
+        function initializeBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            // Create category headers
+            jeopardyData.categories.forEach(category => {
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = category;
+                gameBoard.appendChild(header);
+            });
+            
+            // Create clue cells (5 rows of clues)
+            for (let row = 0; row < 5; row++) {
+                jeopardyData.categories.forEach((category, colIndex) => {
+                    const clue = jeopardyData.clues[category][row];
+                    const cell = document.createElement('div');
+                    cell.className = 'clue-cell';
+                    cell.textContent = `$${clue.value}`;
+                    cell.dataset.category = category;
+                    cell.dataset.row = row;
+                    cell.dataset.col = colIndex;
+                    
+                    cell.addEventListener('click', () => showClue(category, row));
+                    gameBoard.appendChild(cell);
+                });
+            }
+            
+            updateUsedClues();
+        }
+
+        function showClue(category, row) {
+            const clueKey = `${category}-${row}`;
+            if (usedClues.has(clueKey)) return;
+            
+            const clue = jeopardyData.clues[category][row];
+            currentClue = { ...clue, category, row };
+            
+            document.getElementById('clueValue').textContent = `$${clue.value}`;
+            document.getElementById('clueText').textContent = clue.clue;
+            document.getElementById('answerText').textContent = clue.answer;
+            
+            document.getElementById('answerSection').style.display = 'none';
+            document.getElementById('questionButtons').style.display = 'block';
+            
+            document.getElementById('clueModal').style.display = 'flex';
+            
+            // Mark as used on display
+            usedClues.add(clueKey);
+            updateUsedClues();
+        }
+
+        function revealAnswer() {
+            document.getElementById('answerSection').style.display = 'block';
+            document.getElementById('questionButtons').style.display = 'none';
+        }
+
+        function handleAnswer(isCorrect) {
+            if (currentClue) {
+                const value = isCorrect ? currentClue.value : -currentClue.value;
+                updateScore(value);
+                
+                // Show score change animation
+                const scoreChange = document.createElement('div');
+                scoreChange.className = 'score-change';
+                scoreChange.textContent = `${isCorrect ? '+' : '-'}$${currentClue.value}`;
+                scoreChange.style.color = isCorrect ? '#4caf50' : '#f44336';
+                scoreChange.style.left = `${Math.random() * 80 + 10}%`;
+                scoreChange.style.top = `${Math.random() * 80 + 10}%`;
+                document.body.appendChild(scoreChange);
+                
+                setTimeout(() => {
+                    scoreChange.remove();
+                }, 2000);
+            }
+            
+            closeModal();
+            
+            // Check if game is complete
+            if (usedClues.size === 30) {
+                setTimeout(() => {
+                    alert(`Game Over! Final Score: $${score}`);
+                }, 500);
+            }
+        }
+
+        function updateScore(change) {
+            score += change;
+            document.getElementById('score').textContent = `$${score}`;
+            
+            // Update color based on score
+            const scoreElement = document.getElementById('score');
+            if (score > 0) {
+                scoreElement.style.color = '#4caf50';
+            } else if (score < 0) {
+                scoreElement.style.color = '#f44336';
+            } else {
+                scoreElement.style.color = '#ffd700';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('clueModal').style.display = 'none';
+            currentClue = null;
+        }
+
+        function updateUsedClues() {
+            document.querySelectorAll('.clue-cell').forEach(cell => {
+                const clueKey = `${cell.dataset.category}-${cell.dataset.row}`;
+                if (usedClues.has(clueKey)) {
+                    cell.classList.add('used');
+                } else {
+                    cell.classList.remove('used');
+                }
+            });
+        }
+
+        function newGame() {
+            if (confirm("Start a new game? Your current score will be reset.")) {
+                score = 0;
+                usedClues.clear();
+                updateScore(0);
+                initializeBoard();
+            }
+        }
+
+        function resetBoard() {
+            if (confirm("Reset the game board? All clues will be available again.")) {
+                usedClues.clear();
+                updateUsedClues();
+            }
+        }
+
+        function showInstructions() {
+            alert("HOW TO PLAY:\n\n1. Click on any dollar amount to reveal a clue\n2. Read the clue and think of your answer\n3. Click 'Reveal Answer' to see the correct response\n4. Click 'Correct!' if you got it right, or 'Incorrect' if not\n5. Correct answers add to your score, incorrect answers subtract\n6. Try to clear the entire board for maximum points!\n\nGood luck!");
+        }
+
+        // Event listeners
+        document.getElementById('newGameBtn').addEventListener('click', newGame);
+        document.getElementById('howToPlayBtn').addEventListener('click', showInstructions);
+        document.getElementById('resetBoardBtn').addEventListener('click', resetBoard);
+
+        // Close modal when clicking outside
+        document.getElementById('clueModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('clueModal')) {
+                closeModal();
+            }
+        });
+
+        // Initialize the game
+        initializeBoard();
+    </script>
+</body>
+</html>
